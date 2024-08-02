@@ -1,4 +1,4 @@
-module ci.unitedline.net/wavix/go-private-sdk
+module github.com/wavix/go-lib
 
 go 1.21.5
 

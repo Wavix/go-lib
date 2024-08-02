@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 
-	"ci.unitedline.net/wavix/go-private-sdk/amqp"
 	"github.com/wagslane/go-rabbitmq"
+	"github.com/wavix/go-lib/amqp"
 )
 
 type MetricInstance struct {
