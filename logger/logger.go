@@ -29,9 +29,9 @@ type SetupOptions struct {
 }
 
 type Log struct {
-	Message  interface{}
-	Level    LogLevel
-	EventIDs []LoggerEventID
+	Message interface{}
+	Level   LogLevel
+	EventId LoggerEventID
 }
 
 type Logger struct {
@@ -39,6 +39,16 @@ type Logger struct {
 	MuteEnvTest bool
 	ServiceName string
 	LogLevelMax int
+}
+
+type LoggerEvent struct {
+	Logger   *Logger
+	ID       LoggerEventID
+	LogLevel LogLevel
+}
+
+type LoggerEventParams struct {
+	ID LoggerEventID
 }
 
 func New(service string, options *SetupOptions) *Logger {
@@ -73,35 +83,36 @@ func (l *Logger) SetServiceName(name string) {
 	l.ServiceName = name
 }
 
-func (l *Logger) Info(message interface{}, args ...LoggerEventID) {
-	l.log(Log{
-		Message:  message,
-		EventIDs: args,
-		Level:    "info",
+func (l *Logger) Info(params *LoggerEventParams) *LoggerEvent {
+	return l.getLoggerEvent("info", params)
+}
+
+func (l *Logger) Warn(params *LoggerEventParams) *LoggerEvent {
+	return l.getLoggerEvent("warn", params)
+}
+
+func (l *Logger) Error(params *LoggerEventParams) *LoggerEvent {
+	return l.getLoggerEvent("error", params)
+}
+
+func (event *LoggerEvent) Msgf(format string, args ...interface{}) {
+	message := fmt.Sprintf(format, args...)
+	event.Logger.log(Log{
+		Message: message,
+		EventId: event.ID,
+		Level:   event.LogLevel,
 	})
 }
 
-func (l *Logger) Warn(message interface{}, args ...LoggerEventID) {
-	l.log(Log{
-		Message:  message,
-		EventIDs: args,
-		Level:    "warn",
-	})
-}
-
-func (l *Logger) Error(message interface{}, args ...LoggerEventID) {
-	l.log(Log{
-		Message:  message,
-		EventIDs: args,
-		Level:    "error",
+func (event *LoggerEvent) Msg(message string) {
+	event.Logger.log(Log{
+		Message: message,
+		EventId: event.ID,
+		Level:   event.LogLevel,
 	})
 }
 
 func (l *Logger) log(args Log) {
-	var eventID LoggerEventID
-	if len(args.EventIDs) > 0 {
-		eventID = args.EventIDs[0]
-	}
 
 	prettyMessage := l.getPrettyMessage(args.Message)
 
@@ -113,8 +124,8 @@ func (l *Logger) log(args Log) {
 
 	spacesAfterLevel := strings.Repeat(" ", l.LogLevelMax-len(logLevelProps.Text)+1)
 
-	if eventID != nil {
-		eventIDStr := fmt.Sprintf("%v", eventID)
+	if args.EventId != nil {
+		eventIDStr := fmt.Sprintf("%v", args.EventId)
 		prettyMessage = fmt.Sprintf("[%v] %v", eventIDStr, prettyMessage)
 	}
 
@@ -187,4 +198,17 @@ func (l *Logger) getSpaces(service string) string {
 		spaces += " "
 	}
 	return spaces
+}
+
+func (l *Logger) getLoggerEvent(level LogLevel, params *LoggerEventParams) *LoggerEvent {
+	var eventID LoggerEventID
+	if params != nil && params.ID != nil {
+		eventID = params.ID
+	}
+
+	return &LoggerEvent{
+		Logger:   l,
+		LogLevel: level,
+		ID:       eventID,
+	}
 }
