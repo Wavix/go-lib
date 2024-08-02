@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 
 	"github.com/wagslane/go-rabbitmq"
@@ -21,23 +22,24 @@ type MetricPayload struct {
 
 const RoutingKey = "metrics_exporter"
 
-func Init(amqpDsn string, service string) *MetricInstance {
+func Init(amqpDsn string, service string) (*MetricInstance, error) {
 	connection := amqp.OpenAmqpConnection(amqpDsn)
 	if connection == nil {
-		log.Println("Failed to open AMQP connection")
-		return nil
+		return nil, errors.New("failed to open AMQP connection")
 	}
 
 	publisher := amqp.StartAmqpPublisher(connection)
 
 	if publisher == nil {
-		log.Println("Failed to start AMQP publisher")
+		return nil, errors.New("failed to start AMQP publisher")
 	}
 
-	return &MetricInstance{
+	instance := &MetricInstance{
 		Connection: publisher,
 		Service:    service,
 	}
+
+	return instance, nil
 }
 
 func (m *MetricInstance) IncrementCounter(key string) {
