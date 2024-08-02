@@ -43,6 +43,10 @@ func Init(amqpDsn string, service string) (*MetricInstance, error) {
 }
 
 func (m *MetricInstance) IncrementCounter(key string) {
+	if m == nil || m.Connection == nil {
+		return
+	}
+
 	payload := MetricPayload{Key: key, Value: 1, Type: "counter"}
 	data, _ := json.Marshal(payload)
 
@@ -53,6 +57,10 @@ func (m *MetricInstance) IncrementCounter(key string) {
 }
 
 func (m *MetricInstance) SetGauge(key string, value int) {
+	if m == nil || m.Connection == nil {
+		return
+	}
+
 	payload := MetricPayload{Key: key, Value: value, Type: "gauge"}
 	data, _ := json.Marshal(payload)
 

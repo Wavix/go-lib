@@ -14,7 +14,8 @@ func OpenAmqpConnection(amqp string) *rabbitmq.Conn {
 		rabbitmq.WithConnectionOptionsLogging,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil
 	}
 
 	return conn
@@ -29,12 +30,14 @@ func StartAmqpConsumer(conn *rabbitmq.Conn, handler func(rabbitmq.Delivery) rabb
 		rabbitmq.WithConsumerOptionsConsumerAutoAck(true),
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil
 	}
 
 	err = consumer.Run(handler)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil
 	}
 
 	return consumer
@@ -47,7 +50,8 @@ func StartAmqpPublisher(conn *rabbitmq.Conn) *rabbitmq.Publisher {
 		rabbitmq.WithPublisherOptionsExchangeName(topic),
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return nil
 	}
 
 	return publisher
