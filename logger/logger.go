@@ -87,6 +87,10 @@ func (l *Logger) Info(params *LoggerEventParams) *LoggerEvent {
 	return l.getLoggerEvent("info", params)
 }
 
+func (l *Logger) Debug(params *LoggerEventParams) *LoggerEvent {
+	return l.getLoggerEvent("debug", params)
+}
+
 func (l *Logger) Warn(params *LoggerEventParams) *LoggerEvent {
 	return l.getLoggerEvent("warn", params)
 }
