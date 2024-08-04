@@ -48,9 +48,13 @@ func (m *MetricInstance) IncrementCounter(key string) {
 	}
 
 	payload := MetricPayload{Key: key, Value: 1, Type: "counter"}
-	data, _ := json.Marshal(payload)
+	data, err := json.Marshal(payload)
+	if err != nil {
+		log.Println("Failed to marshal counter")
+		return
+	}
 
-	err := m.Connection.Publish([]byte(data), []string{RoutingKey}, rabbitmq.WithPublishOptionsContentType("application/json"))
+	err = m.Connection.Publish([]byte(data), []string{RoutingKey}, rabbitmq.WithPublishOptionsContentType("application/json"))
 	if err != nil {
 		log.Println("Failed to publish counter")
 	}
@@ -62,9 +66,14 @@ func (m *MetricInstance) SetGauge(key string, value int) {
 	}
 
 	payload := MetricPayload{Key: key, Value: value, Type: "gauge"}
-	data, _ := json.Marshal(payload)
+	data, err := json.Marshal(payload)
 
-	err := m.Connection.Publish([]byte(data), []string{RoutingKey}, rabbitmq.WithPublishOptionsContentType("application/json"))
+	if err != nil {
+		log.Println("Failed to marshal gauge")
+		return
+	}
+
+	err = m.Connection.Publish([]byte(data), []string{RoutingKey}, rabbitmq.WithPublishOptionsContentType("application/json"))
 	if err != nil {
 		log.Println("Failed to publish gauge")
 	}
