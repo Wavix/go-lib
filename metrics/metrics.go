@@ -15,9 +15,10 @@ type MetricInstance struct {
 }
 
 type MetricPayload struct {
-	Key   string `json:"key"`
-	Value int    `json:"value"`
-	Type  string `json:"type"`
+	Service string `json:"service"`
+	Key     string `json:"key"`
+	Value   int    `json:"value"`
+	Type    string `json:"type"`
 }
 
 const RoutingKey = "metrics_exporter"
@@ -47,7 +48,7 @@ func (m *MetricInstance) IncrementCounter(key string) {
 		return
 	}
 
-	payload := MetricPayload{Key: key, Value: 1, Type: "counter"}
+	payload := MetricPayload{Service: m.Service, Key: key, Value: 1, Type: "counter"}
 	data, err := json.Marshal(payload)
 	if err != nil {
 		log.Println("Failed to marshal counter")
@@ -65,7 +66,7 @@ func (m *MetricInstance) SetGauge(key string, value int) {
 		return
 	}
 
-	payload := MetricPayload{Key: key, Value: value, Type: "gauge"}
+	payload := MetricPayload{Service: m.Service, Key: key, Value: value, Type: "gauge"}
 	data, err := json.Marshal(payload)
 
 	if err != nil {
