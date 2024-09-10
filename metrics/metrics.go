@@ -70,6 +70,24 @@ func (m *MetricInstance) IncrementCounter(key string) {
 	}
 }
 
+func (m *MetricInstance) IncrementCounterBy(key string, amount int) {
+	if m == nil || m.Connection == nil {
+		return
+	}
+
+	payload := MetricPayload{Service: m.Service, Key: key, Value: amount, Type: "counter"}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		log.Println("Failed to marshal counter")
+		return
+	}
+
+	err = m.Connection.Publish([]byte(data), []string{RoutingKey}, rabbitmq.WithPublishOptionsContentType("application/json"))
+	if err != nil {
+		log.Println("Failed to publish counter")
+	}
+}
+
 func (m *MetricInstance) SetGauge(key string, value int) {
 	if m == nil || m.Connection == nil {
 		return
