@@ -117,27 +117,31 @@ func (event *LoggerEvent) Msg(message string) {
 }
 
 func (l *Logger) log(args Log) {
-
-	prettyMessage := l.getPrettyMessage(args.Message)
-
 	dateStr := time.Now().Format("02.01.2006 15:04:05")
 	logLevelProps := l.getLogLevelProps(args.Level)
 
-	spaces := l.getSpaces(l.ServiceName)
-	serviceColor := l.getServiceColor(l.ServiceName)
-
-	spacesAfterLevel := strings.Repeat(" ", l.LogLevelMax-len(logLevelProps.Text)+1)
-
+	prettyMessage := l.getPrettyMessage(args.Message)
 	if args.EventId != nil {
-		eventIDStr := fmt.Sprintf("%v", args.EventId)
-		prettyMessage = fmt.Sprintf("[%v] %v", eventIDStr, prettyMessage)
+		prettyMessage = fmt.Sprintf("[%v] %v", args.EventId, prettyMessage)
 	}
 
-	color.New(color.FgCyan).Print(dateStr)
-	color.New(logLevelProps.LevelColor).Printf(" %s %s", logLevelProps.Text, spacesAfterLevel)
+	cyan := color.New(color.FgCyan).SprintFunc()
+	levelColor := color.New(logLevelProps.LevelColor).SprintFunc()
+	serviceColor := color.New(l.getServiceColor(l.ServiceName)).SprintFunc()
+	textColor := color.New(logLevelProps.TextColor).SprintFunc()
 
-	color.New(serviceColor).Printf("[%s]:%s", l.ServiceName, spaces)
-	color.New(logLevelProps.TextColor).Println(prettyMessage)
+	spaces := l.getSpaces(l.ServiceName)
+	spacesAfterLevel := strings.Repeat(" ", l.LogLevelMax-len(logLevelProps.Text)+1)
+
+	fmt.Printf(
+		"%s %s %s[%s]:%s%s\n",
+		cyan(dateStr),
+		levelColor(logLevelProps.Text),
+		spacesAfterLevel,
+		serviceColor(l.ServiceName),
+		spaces,
+		textColor(prettyMessage),
+	)
 }
 
 func (l *Logger) getPrettyMessage(message interface{}) string {
