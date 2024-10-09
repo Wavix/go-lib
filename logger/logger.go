@@ -119,23 +119,19 @@ func (l *Logger) Error() *LoggerEvent {
 }
 
 func (event *LoggerEvent) Info() *LoggerEvent {
-	params := []interface{}{event.id, event.extra}
-	return event.logger.getLoggerEvent("info", params...)
+	return event.logger.getLoggerEvent("info", event.id, event.extra)
 }
 
 func (event *LoggerEvent) Debug() *LoggerEvent {
-	params := []interface{}{event.id, event.extra}
-	return event.logger.getLoggerEvent("debug", params...)
+	return event.logger.getLoggerEvent("debug", event.id, event.extra)
 }
 
 func (event *LoggerEvent) Warn() *LoggerEvent {
-	params := []interface{}{event.id, event.extra}
-	return event.logger.getLoggerEvent("warn", params...)
+	return event.logger.getLoggerEvent("warn", event.id, event.extra)
 }
 
 func (event *LoggerEvent) Error() *LoggerEvent {
-	params := []interface{}{event.id, event.extra}
-	return event.logger.getLoggerEvent("error", params...)
+	return event.logger.getLoggerEvent("error", event.id, event.extra)
 }
 
 func (event *LoggerEvent) Extra(data ...interface{}) *LoggerEvent {
