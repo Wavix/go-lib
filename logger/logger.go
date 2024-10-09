@@ -33,7 +33,7 @@ type Log struct {
 	Message interface{}
 	Level   LogLevel
 	EventId LoggerEventID
-	Extra   *ExtraData
+	Extra   ExtraData
 }
 
 type Logger struct {
@@ -47,7 +47,7 @@ type LoggerEvent struct {
 	logger   *Logger
 	id       LoggerEventID
 	logLevel LogLevel
-	extra    *ExtraData
+	extra    ExtraData
 }
 
 type LoggerContext struct {
@@ -88,10 +88,10 @@ func (l *Logger) SetServiceName(name string) {
 }
 
 func (l *Logger) Context(id LoggerEventID, extra ...ExtraData) *LoggerEvent {
-	var extraData *ExtraData
+	var extraData ExtraData
 
 	if len(extra) > 0 {
-		extraData = &extra[0]
+		extraData = extra[0]
 	}
 
 	return &LoggerEvent{
@@ -140,16 +140,12 @@ func (event *LoggerEvent) Error() *LoggerEvent {
 
 func (event *LoggerEvent) Extra(data ...interface{}) *LoggerEvent {
 	if event.extra == nil {
-		newExtra := make(ExtraData, len(data)/2)
-		event.extra = &newExtra
+		event.extra = make(ExtraData, len(data)/2)
 	}
 
-	extra := make(ExtraData, len(data)/2)
 	for i := 0; i < len(data); i += 2 {
-		extra[data[i].(string)] = data[i+1]
+		event.extra[data[i].(string)] = data[i+1]
 	}
-
-	event.extra = &extra
 
 	return event
 }
@@ -182,7 +178,7 @@ func (l *Logger) log(args Log) {
 	if args.Extra != nil {
 		extraString := ""
 
-		for key, value := range *args.Extra {
+		for key, value := range args.Extra {
 			extraString += fmt.Sprintf("%v=%v,", key, value)
 		}
 
@@ -279,13 +275,13 @@ func (l *Logger) getSpaces(service string) string {
 
 func (l *Logger) getLoggerEvent(level LogLevel, params ...interface{}) *LoggerEvent {
 	var id string
-	var extra *ExtraData
+	var extra ExtraData
 
 	for _, param := range params {
 		switch v := param.(type) {
 		case string:
 			id = v
-		case *ExtraData:
+		case ExtraData:
 			extra = v
 		}
 	}
