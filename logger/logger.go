@@ -102,20 +102,20 @@ func (l *Logger) Context(id LoggerEventID, extra ...ExtraData) *LoggerEvent {
 	}
 }
 
-func (l *Logger) Info(params ...interface{}) *LoggerEvent {
-	return l.getLoggerEvent("info", params)
+func (l *Logger) Info() *LoggerEvent {
+	return l.getLoggerEvent("info")
 }
 
-func (l *Logger) Debug(params ...interface{}) *LoggerEvent {
-	return l.getLoggerEvent("debug", params)
+func (l *Logger) Debug() *LoggerEvent {
+	return l.getLoggerEvent("debug")
 }
 
-func (l *Logger) Warn(params ...interface{}) *LoggerEvent {
-	return l.getLoggerEvent("warn", params)
+func (l *Logger) Warn() *LoggerEvent {
+	return l.getLoggerEvent("warn")
 }
 
-func (l *Logger) Error(params ...interface{}) *LoggerEvent {
-	return l.getLoggerEvent("error", params)
+func (l *Logger) Error() *LoggerEvent {
+	return l.getLoggerEvent("error")
 }
 
 func (event *LoggerEvent) Info() *LoggerEvent {
