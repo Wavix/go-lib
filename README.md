@@ -27,7 +27,7 @@ func main() {
 
 	// Logger example with context (id, extra data)
 	loggerContext := logs.Context("<operation id>", logger.ExtraData{"k1": "v1", "k2": "v2"})
-	loggerContext.Warn().Msg("Message with context and extra")
+	loggerContext.Warn().Extra("k3", "v3").Msg("Message with context and extra")
 
 	// Logger example with context (id)
 	logs.Context("<operation id>").Info().Msg("Message for SMPP info")
