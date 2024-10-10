@@ -24,9 +24,15 @@ import (
 
 func main() {
  	logs := logger.New("Service name", nil)
-	logs.Info(&logger.LoggerEventParams{ID: "<operation id>"}).Msg("Log example")
 
-    err := errors.New("some error")
-    logs.error(nil).Msgf("Err: %v", err)
+	// Logger example with context (id, extra data)
+	loggerContext := logs.Context("<operation id>", logger.ExtraData{"k1": "v1", "k2": "v2"})
+	loggerContext.Warn().Extra("k3", "v3").Msg("Message with context and extra")
+
+	// Logger example with context (id)
+	logs.Context("<operation id>").Info().Msg("Message for SMPP info")
+
+	// Logger example without context
+	logs.Error().Msg("Error message")
 }
 ```

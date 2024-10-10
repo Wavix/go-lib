@@ -21,6 +21,7 @@ type LogLevelResponse struct {
 }
 
 type LoggerEventID interface{}
+type ExtraData map[string]interface{}
 
 type SetupOptions struct {
 	MaxWordSize  int
@@ -32,6 +33,7 @@ type Log struct {
 	Message interface{}
 	Level   LogLevel
 	EventId LoggerEventID
+	Extra   ExtraData
 }
 
 type Logger struct {
@@ -42,13 +44,15 @@ type Logger struct {
 }
 
 type LoggerEvent struct {
-	Logger   *Logger
-	ID       LoggerEventID
-	LogLevel LogLevel
+	logger   *Logger
+	id       LoggerEventID
+	logLevel LogLevel
+	extra    ExtraData
 }
 
-type LoggerEventParams struct {
-	ID LoggerEventID
+type LoggerContext struct {
+	ID    LoggerEventID
+	Extra *ExtraData
 }
 
 func New(service string, options *SetupOptions) *Logger {
@@ -83,36 +87,81 @@ func (l *Logger) SetServiceName(name string) {
 	l.ServiceName = name
 }
 
-func (l *Logger) Info(params *LoggerEventParams) *LoggerEvent {
-	return l.getLoggerEvent("info", params)
+func (l *Logger) Context(id LoggerEventID, extra ...ExtraData) *LoggerEvent {
+	var extraData ExtraData
+
+	if len(extra) > 0 {
+		extraData = extra[0]
+	}
+
+	return &LoggerEvent{
+		logLevel: "info",
+		logger:   l,
+		id:       id,
+		extra:    extraData,
+	}
 }
 
-func (l *Logger) Debug(params *LoggerEventParams) *LoggerEvent {
-	return l.getLoggerEvent("debug", params)
+func (l *Logger) Info() *LoggerEvent {
+	return l.getLoggerEvent("info")
 }
 
-func (l *Logger) Warn(params *LoggerEventParams) *LoggerEvent {
-	return l.getLoggerEvent("warn", params)
+func (l *Logger) Debug() *LoggerEvent {
+	return l.getLoggerEvent("debug")
 }
 
-func (l *Logger) Error(params *LoggerEventParams) *LoggerEvent {
-	return l.getLoggerEvent("error", params)
+func (l *Logger) Warn() *LoggerEvent {
+	return l.getLoggerEvent("warn")
+}
+
+func (l *Logger) Error() *LoggerEvent {
+	return l.getLoggerEvent("error")
+}
+
+func (event *LoggerEvent) Info() *LoggerEvent {
+	return event.logger.getLoggerEvent("info", event.id, event.extra)
+}
+
+func (event *LoggerEvent) Debug() *LoggerEvent {
+	return event.logger.getLoggerEvent("debug", event.id, event.extra)
+}
+
+func (event *LoggerEvent) Warn() *LoggerEvent {
+	return event.logger.getLoggerEvent("warn", event.id, event.extra)
+}
+
+func (event *LoggerEvent) Error() *LoggerEvent {
+	return event.logger.getLoggerEvent("error", event.id, event.extra)
+}
+
+func (event *LoggerEvent) Extra(data ...interface{}) *LoggerEvent {
+	if event.extra == nil {
+		event.extra = make(ExtraData, len(data)/2)
+	}
+
+	for i := 0; i < len(data); i += 2 {
+		event.extra[data[i].(string)] = data[i+1]
+	}
+
+	return event
 }
 
 func (event *LoggerEvent) Msgf(format string, args ...interface{}) {
 	message := fmt.Sprintf(format, args...)
-	event.Logger.log(Log{
+	event.logger.log(Log{
 		Message: message,
-		EventId: event.ID,
-		Level:   event.LogLevel,
+		EventId: event.id,
+		Level:   event.logLevel,
+		Extra:   event.extra,
 	})
 }
 
 func (event *LoggerEvent) Msg(message string) {
-	event.Logger.log(Log{
+	event.logger.log(Log{
 		Message: message,
-		EventId: event.ID,
-		Level:   event.LogLevel,
+		EventId: event.id,
+		Level:   event.logLevel,
+		Extra:   event.extra,
 	})
 }
 
@@ -121,7 +170,19 @@ func (l *Logger) log(args Log) {
 	logLevelProps := l.getLogLevelProps(args.Level)
 
 	prettyMessage := l.getPrettyMessage(args.Message)
-	if args.EventId != nil {
+
+	if args.Extra != nil {
+		extraString := ""
+
+		for key, value := range args.Extra {
+			extraString += fmt.Sprintf("%v=%v,", key, value)
+		}
+
+		extraString = strings.TrimRight(extraString, ",")
+		prettyMessage = fmt.Sprintf("[%v] %v", extraString, prettyMessage)
+	}
+
+	if args.EventId != nil && args.EventId != "" {
 		prettyMessage = fmt.Sprintf("[%v] %v", args.EventId, prettyMessage)
 	}
 
@@ -208,15 +269,23 @@ func (l *Logger) getSpaces(service string) string {
 	return spaces
 }
 
-func (l *Logger) getLoggerEvent(level LogLevel, params *LoggerEventParams) *LoggerEvent {
-	var eventID LoggerEventID
-	if params != nil && params.ID != nil {
-		eventID = params.ID
+func (l *Logger) getLoggerEvent(level LogLevel, params ...interface{}) *LoggerEvent {
+	var id string
+	var extra ExtraData
+
+	for _, param := range params {
+		switch v := param.(type) {
+		case string:
+			id = v
+		case ExtraData:
+			extra = v
+		}
 	}
 
 	return &LoggerEvent{
-		Logger:   l,
-		LogLevel: level,
-		ID:       eventID,
+		logger:   l,
+		logLevel: level,
+		id:       id,
+		extra:    extra,
 	}
 }
