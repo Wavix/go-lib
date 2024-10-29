@@ -25,6 +25,7 @@ type LoggerEntityID interface{}
 type ExtraData map[string]interface{}
 
 type SetupOptions struct {
+	Level       LogLevel
 	MaxWordSize int
 	MuteEnvTest bool
 	Plain       bool
@@ -43,6 +44,7 @@ type Logger struct {
 	ServiceName string
 	LogLevelMax int
 	Plain       bool
+	LogLevel    LogLevel
 }
 
 type LoggerEvent struct {
@@ -70,6 +72,7 @@ func New(service string, options ...SetupOptions) *Logger {
 	MaxWordSize := 20
 	MuteEnvTest := false
 	plainTextLogs := false
+	level := "debug"
 
 	if len(options) > 0 {
 		if options[0].MaxWordSize > 0 {
@@ -83,6 +86,10 @@ func New(service string, options ...SetupOptions) *Logger {
 		if options[0].Plain {
 			plainTextLogs = options[0].Plain
 		}
+
+		if options[0].Level != "" {
+			level = string(options[0].Level)
+		}
 	}
 
 	return &Logger{
@@ -91,6 +98,7 @@ func New(service string, options ...SetupOptions) *Logger {
 		ServiceName: service,
 		LogLevelMax: 4,
 		Plain:       plainTextLogs,
+		LogLevel:    LogLevel(level),
 	}
 }
 
@@ -184,12 +192,25 @@ func (event *LoggerEvent) Msg(message string) {
 	})
 }
 func (l *Logger) log(args Log) {
+	if !l.isLogLevelAllowed(args.Level) {
+		return
+	}
+
 	if l.Plain {
 		l.logPlain(args)
 		return
 	}
 
 	l.logJSON(args)
+}
+
+func (l *Logger) isLogLevelAllowed(level LogLevel) bool {
+	switch l.LogLevel {
+	case "info":
+		return level == "info" || level == "warn" || level == "error"
+	default:
+		return true
+	}
 }
 
 func (l *Logger) logJSON(args Log) {
