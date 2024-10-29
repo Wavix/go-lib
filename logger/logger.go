@@ -94,32 +94,6 @@ func New(service string, options ...SetupOptions) *Logger {
 	}
 }
 
-// func New(service string, options *SetupOptions) *Logger {
-// 	MaxWordSize := 20
-// 	MuteEnvTest := false
-// 	plainTextLogs := false
-
-// 	if options != nil && options.MaxWordSize > 0 {
-// 		MaxWordSize = options.MaxWordSize
-// 	}
-
-// 	if options != nil && options.MuteEnvTest {
-// 		MuteEnvTest = options.MuteEnvTest
-// 	}
-
-// 	if options != nil && options.Plain {
-// 		plainTextLogs = options.Plain
-// 	}
-
-// 	return &Logger{
-// 		MaxWordSize: MaxWordSize,
-// 		MuteEnvTest: MuteEnvTest,
-// 		ServiceName: service,
-// 		LogLevelMax: 4,
-// 		Plain:       plainTextLogs,
-// 	}
-// }
-
 func (l *Logger) SetPadSize(size int) {
 	l.MaxWordSize = size
 }
