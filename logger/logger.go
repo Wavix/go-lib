@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -20,20 +21,20 @@ type LogLevelResponse struct {
 	TextColor  color.Attribute
 }
 
-type LoggerEventID interface{}
+type LoggerEntityID interface{}
 type ExtraData map[string]interface{}
 
 type SetupOptions struct {
-	MaxWordSize  int
-	MuteEnvTest  bool
-	EventIDLimit int
+	MaxWordSize int
+	MuteEnvTest bool
+	Plain       bool
 }
 
 type Log struct {
-	Message interface{}
-	Level   LogLevel
-	EventId LoggerEventID
-	Extra   ExtraData
+	Message  interface{}
+	Level    LogLevel
+	EntityId LoggerEntityID
+	Extra    ExtraData
 }
 
 type Logger struct {
@@ -41,30 +42,47 @@ type Logger struct {
 	MuteEnvTest bool
 	ServiceName string
 	LogLevelMax int
+	Plain       bool
 }
 
 type LoggerEvent struct {
 	logger   *Logger
-	id       LoggerEventID
+	id       LoggerEntityID
 	logLevel LogLevel
 	extra    ExtraData
 }
 
 type LoggerContext struct {
-	ID    LoggerEventID
+	ID    LoggerEntityID
 	Extra *ExtraData
 }
 
-func New(service string, options *SetupOptions) *Logger {
+type LoggerResult struct {
+	EntityId *string   `json:"entity_id"`
+	Message  string    `json:"message"`
+	Level    string    `json:"level"`
+	Extra    ExtraData `json:"extra"`
+	Service  string    `json:"service"`
+	Date     time.Time `json:"date"`
+}
+
+func New(service string, options ...SetupOptions) *Logger {
 	MaxWordSize := 20
 	MuteEnvTest := false
+	plainTextLogs := false
 
-	if options != nil && options.MaxWordSize > 0 {
-		MaxWordSize = options.MaxWordSize
-	}
+	if len(options) > 0 {
+		if options[0].MaxWordSize > 0 {
+			MaxWordSize = options[0].MaxWordSize
+		}
 
-	if options != nil && options.MuteEnvTest {
-		MuteEnvTest = options.MuteEnvTest
+		if options[0].MuteEnvTest {
+			MuteEnvTest = options[0].MuteEnvTest
+		}
+
+		if options[0].Plain {
+			plainTextLogs = options[0].Plain
+		}
 	}
 
 	return &Logger{
@@ -72,6 +90,7 @@ func New(service string, options *SetupOptions) *Logger {
 		MuteEnvTest: MuteEnvTest,
 		ServiceName: service,
 		LogLevelMax: 4,
+		Plain:       plainTextLogs,
 	}
 }
 
@@ -87,7 +106,7 @@ func (l *Logger) SetServiceName(name string) {
 	l.ServiceName = name
 }
 
-func (l *Logger) Context(id LoggerEventID, extra ...ExtraData) *LoggerEvent {
+func (l *Logger) Context(id LoggerEntityID, extra ...ExtraData) *LoggerEvent {
 	var extraData ExtraData
 
 	if len(extra) > 0 {
@@ -149,23 +168,60 @@ func (event *LoggerEvent) Extra(data ...interface{}) *LoggerEvent {
 func (event *LoggerEvent) Msgf(format string, args ...interface{}) {
 	message := fmt.Sprintf(format, args...)
 	event.logger.log(Log{
-		Message: message,
-		EventId: event.id,
-		Level:   event.logLevel,
-		Extra:   event.extra,
+		Message:  message,
+		EntityId: event.id,
+		Level:    event.logLevel,
+		Extra:    event.extra,
 	})
 }
 
 func (event *LoggerEvent) Msg(message string) {
 	event.logger.log(Log{
-		Message: message,
-		EventId: event.id,
-		Level:   event.logLevel,
-		Extra:   event.extra,
+		Message:  message,
+		EntityId: event.id,
+		Level:    event.logLevel,
+		Extra:    event.extra,
 	})
 }
-
 func (l *Logger) log(args Log) {
+	if l.Plain {
+		l.logPlain(args)
+		return
+	}
+
+	l.logJSON(args)
+}
+
+func (l *Logger) logJSON(args Log) {
+
+	logLevelProps := l.getLogLevelProps(args.Level)
+	prettyMessage := l.getPrettyMessage(args.Message)
+
+	log := LoggerResult{
+		EntityId: nil,
+		Message:  prettyMessage,
+		Level:    strings.ToLower(logLevelProps.Text),
+		Extra:    args.Extra,
+		Service:  l.ServiceName,
+		Date:     time.Now(),
+	}
+
+	if args.EntityId != "" {
+		entityId := fmt.Sprintf("%v", args.EntityId)
+		log.EntityId = &entityId
+	}
+
+	jsonData, err := json.Marshal(log)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println(string(jsonData))
+}
+
+func (l *Logger) logPlain(args Log) {
 	dateStr := time.Now().Format("02.01.2006 15:04:05")
 	logLevelProps := l.getLogLevelProps(args.Level)
 
@@ -182,8 +238,8 @@ func (l *Logger) log(args Log) {
 		prettyMessage = fmt.Sprintf("[%v] %v", extraString, prettyMessage)
 	}
 
-	if args.EventId != nil && args.EventId != "" {
-		prettyMessage = fmt.Sprintf("[%v] %v", args.EventId, prettyMessage)
+	if args.EntityId != nil && args.EntityId != "" {
+		prettyMessage = fmt.Sprintf("[%v] %v", args.EntityId, prettyMessage)
 	}
 
 	cyan := color.New(color.FgCyan).SprintFunc()
