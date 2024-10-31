@@ -60,12 +60,12 @@ type LoggerContext struct {
 }
 
 type LoggerResult struct {
-	EntityId *string   `json:"entity_id"`
-	Message  string    `json:"message"`
-	Level    string    `json:"level"`
-	Extra    ExtraData `json:"extra"`
-	Service  string    `json:"service"`
-	Date     time.Time `json:"date"`
+	EntityId  *string   `json:"entity_id,omitempty"`
+	Message   string    `json:"message"`
+	Level     string    `json:"level"`
+	Extra     ExtraData `json:"extra,omitempty"`
+	Service   string    `json:"service"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 func New(service string, options ...SetupOptions) *Logger {
@@ -219,12 +219,12 @@ func (l *Logger) logJSON(args Log) {
 	prettyMessage := l.getPrettyMessage(args.Message)
 
 	log := LoggerResult{
-		EntityId: nil,
-		Message:  prettyMessage,
-		Level:    strings.ToLower(logLevelProps.Text),
-		Extra:    args.Extra,
-		Service:  l.ServiceName,
-		Date:     time.Now(),
+		EntityId:  nil,
+		Message:   prettyMessage,
+		Level:     strings.ToLower(logLevelProps.Text),
+		Extra:     args.Extra,
+		Service:   l.ServiceName,
+		Timestamp: time.Now(),
 	}
 
 	if args.EntityId != "" {
