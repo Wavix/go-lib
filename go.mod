@@ -16,6 +16,7 @@ require (
 
 require (
 	github.com/fatih/color v1.17.0
+	github.com/go-playground/assert v1.2.1
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible
 )

@@ -1,0 +1,34 @@
+name: Go
+
+on: [push, pull_request]
+
+env:
+  GOOS: linux
+  GOARCH: amd64
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.21
+
+      - name: Test
+        run: |
+          cp .env.example .env
+          go test -v -coverprofile=coverage.txt -covermode=atomic
