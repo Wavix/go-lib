@@ -33,7 +33,13 @@ func GetAuthServicePath(provider HostnameProvider) string {
 	hostnameFormatted := re.ReplaceAllString(hostname, "")
 
 	if strings.Contains(hostnameFormatted, "qa.") {
-		return fmt.Sprintf("https://api.%s", hostname)
+		parts := strings.Split(hostname, ".")
+		if len(parts) < 3 {
+			return fmt.Sprintf("https://api.%s", hostname)
+		}
+
+		secondLevelDomain := strings.Join(parts[len(parts)-3:], ".")
+		return fmt.Sprintf("https://api.%s", secondLevelDomain)
 	}
 
 	return apiGateway

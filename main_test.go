@@ -26,3 +26,9 @@ func TestGetAuthServicePathQAEnv(t *testing.T) {
 	gateway := utils.GetAuthServicePath(mockProvider)
 	assert.Equal(t, "https://api.qa123.wavix.zone", gateway)
 }
+
+func TestGetAuthServiceLongPath(t *testing.T) {
+	mockProvider := MockHostnameProvider{MockHostname: "some1.some2.some3.qa123.wavix.zone"}
+	gateway := utils.GetAuthServicePath(mockProvider)
+	assert.Equal(t, "https://api.qa123.wavix.zone", gateway)
+}
