@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/wavix/go-lib/logger"
 	"github.com/wavix/go-lib/utils"
@@ -27,15 +28,21 @@ const (
 
 var log = logger.New("PublicAuth")
 
+var transport = &http.Transport{
+	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+	DisableKeepAlives:     false,
+	IdleConnTimeout:       90 * time.Second,
+	MaxIdleConns:          500,
+	MaxIdleConnsPerHost:   100,
+	ForceAttemptHTTP2:     true,
+	ExpectContinueTimeout: 1 * time.Second,
+}
+
+var sharedClient = &http.Client{Transport: transport}
+
 func Public(appid string, ipAddr string) PublicAuthResponse {
 	gw := utils.GetAuthServicePath(utils.DefaultHostnameProvider{})
 	authServicePath := fmt.Sprintf("%s/private/auth/public?appid=%s&ip=%s", gw, appid, ipAddr)
-
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-
-	client := &http.Client{Transport: transport}
 
 	req, err := http.NewRequest("GET", authServicePath, nil)
 	if err != nil {
@@ -45,7 +52,7 @@ func Public(appid string, ipAddr string) PublicAuthResponse {
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(req)
+	resp, err := sharedClient.Do(req)
 	if err != nil {
 		log.Error().Msgf("Failed to send request: %v", err)
 		return errorResponse(PublicAuthGenericError)
