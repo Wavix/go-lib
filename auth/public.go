@@ -42,7 +42,7 @@ var sharedClient = &http.Client{Transport: transport}
 
 func Public(appid string, ipAddr string) PublicAuthResponse {
 	gw := utils.GetAuthServicePath(utils.DefaultHostnameProvider{})
-	authServicePath := fmt.Sprintf("%s/private/auth/public?appid=%s&ip=%s", gw, appid, ipAddr)
+	authServicePath := fmt.Sprintf("%s/auth/public?appid=%s&ip=%s", gw, appid, ipAddr)
 
 	req, err := http.NewRequest("GET", authServicePath, nil)
 	if err != nil {
