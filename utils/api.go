@@ -18,7 +18,7 @@ func (d DefaultHostnameProvider) Hostname() (string, error) {
 }
 
 func GetAuthServicePath(provider HostnameProvider) string {
-	apiGateway := "https://api.wavix.com"
+	apiGateway := "https://private-api.wavix.com"
 	authService := os.Getenv("AUTH_SERVICE")
 	if authService != "" {
 		return authService
@@ -35,11 +35,11 @@ func GetAuthServicePath(provider HostnameProvider) string {
 	if strings.Contains(hostnameFormatted, "qa.") {
 		parts := strings.Split(hostname, ".")
 		if len(parts) < 3 {
-			return fmt.Sprintf("https://api.%s", hostname)
+			return fmt.Sprintf("https://private-api.%s", hostname)
 		}
 
 		secondLevelDomain := strings.Join(parts[len(parts)-3:], ".")
-		return fmt.Sprintf("https://api.%s", secondLevelDomain)
+		return fmt.Sprintf("https://private-api.%s", secondLevelDomain)
 	}
 
 	return apiGateway
