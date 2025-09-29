@@ -106,6 +106,10 @@ func (l *Logger) SetPadSize(size int) {
 	l.MaxWordSize = size
 }
 
+func (l *Logger) SetLevel(level LogLevel) {
+	l.LogLevel = level
+}
+
 func (l *Logger) MuteTest() {
 	l.MuteEnvTest = true
 }
