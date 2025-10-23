@@ -79,6 +79,22 @@ func StartAmqpConsumer(conn *rabbitmq.Conn, handler func(rabbitmq.Delivery) rabb
 	return consumer
 }
 
+func NewAmqpConsumer(
+	conn *rabbitmq.Conn,
+	routingKey string,
+	queue string,
+	optionFuncs ...func(*rabbitmq.ConsumerOptions),
+) (*rabbitmq.Consumer, error) {
+	defaultOptions := []func(*rabbitmq.ConsumerOptions){
+		rabbitmq.WithConsumerOptionsRoutingKey(routingKey),
+		rabbitmq.WithConsumerOptionsExchangeName(topic),
+		rabbitmq.WithConsumerOptionsLogger(CustomLogger{}),
+		rabbitmq.WithConsumerOptionsConsumerAutoAck(true),
+	}
+	optionFuncs = append(defaultOptions, optionFuncs...)
+	return rabbitmq.NewConsumer(conn, queue, optionFuncs...)
+}
+
 func StartAmqpPublisher(conn *rabbitmq.Conn) *rabbitmq.Publisher {
 	publisher, err := rabbitmq.NewPublisher(
 		conn,
