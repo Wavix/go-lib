@@ -75,7 +75,8 @@ func Public(appid string, ipAddr string) PublicAuthResponse {
 
 	if resp.StatusCode != http.StatusOK {
 		log.Error().Msgf("Failed to send request: %s", authResponseBody.Message)
-		return errorResponse(PublicAuthGenericError)
+
+		return authResponseBody
 	}
 
 	return authResponseBody
