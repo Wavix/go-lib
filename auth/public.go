@@ -40,9 +40,9 @@ var transport = &http.Transport{
 
 var sharedClient = &http.Client{Transport: transport}
 
-func Public(appid string, ipAddr string) PublicAuthResponse {
+func Public(appid, ipAddr, url, method string) PublicAuthResponse {
 	gw := utils.GetAuthServicePath(utils.DefaultHostnameProvider{})
-	authServicePath := fmt.Sprintf("%s/auth/public?appid=%s&ip=%s", gw, appid, ipAddr)
+	authServicePath := fmt.Sprintf("%s/auth/public?appid=%s&ip=%s&url=%s&method=%s", gw, appid, ipAddr, url, method)
 
 	req, err := http.NewRequest("GET", authServicePath, nil)
 	if err != nil {
