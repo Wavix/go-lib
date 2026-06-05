@@ -19,6 +19,7 @@ type PublicAuthUser struct {
 type PublicAuthResponse struct {
 	Success bool           `json:"success"`
 	Message string         `json:"message,omitempty"`
+	Status  int            `json:"status,omitempty"`
 	User    PublicAuthUser `json:"user,omitempty"`
 }
 
@@ -72,6 +73,8 @@ func Public(appid, ipAddr, url, method string) PublicAuthResponse {
 		log.Error().Msgf("Failed to unmarshal response body: %v", err)
 		return errorResponse(PublicAuthGenericError)
 	}
+
+	authResponseBody.Status = resp.StatusCode
 
 	if resp.StatusCode != http.StatusOK {
 		log.Error().Msgf("Failed to send request: %s", authResponseBody.Message)
