@@ -19,6 +19,7 @@ type PublicAuthUser struct {
 type PublicAuthResponse struct {
 	Success bool           `json:"success"`
 	Message string         `json:"message,omitempty"`
+	Status  int            `json:"status,omitempty"`
 	User    PublicAuthUser `json:"user,omitempty"`
 }
 
@@ -40,9 +41,9 @@ var transport = &http.Transport{
 
 var sharedClient = &http.Client{Transport: transport}
 
-func Public(appid string, ipAddr string) PublicAuthResponse {
+func Public(appid, ipAddr, url, method string) PublicAuthResponse {
 	gw := utils.GetAuthServicePath(utils.DefaultHostnameProvider{})
-	authServicePath := fmt.Sprintf("%s/auth/public?appid=%s&ip=%s", gw, appid, ipAddr)
+	authServicePath := fmt.Sprintf("%s/auth/public?appid=%s&ip=%s&url=%s&method=%s", gw, appid, ipAddr, url, method)
 
 	req, err := http.NewRequest("GET", authServicePath, nil)
 	if err != nil {
@@ -72,6 +73,8 @@ func Public(appid string, ipAddr string) PublicAuthResponse {
 		log.Error().Msgf("Failed to unmarshal response body: %v", err)
 		return errorResponse(PublicAuthGenericError)
 	}
+
+	authResponseBody.Status = resp.StatusCode
 
 	if resp.StatusCode != http.StatusOK {
 		log.Error().Msgf("Failed to send request: %s", authResponseBody.Message)
